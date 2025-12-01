@@ -1,0 +1,144 @@
+/* --- 1. VARIABLES & BASE --- */
+:root {
+    --navy-dark: #203061;
+    --navy-light: #57487F;
+    --purple: #885091;
+    --pink-dark: #F880B0;
+    --pink-light: #F7BFD8;
+}
+
+body {
+    background: linear-gradient(135deg, var(--navy-dark) 0%, var(--navy-light) 50%, var(--purple) 100%);
+    min-height: 100vh;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    color: white;
+    overflow-x: hidden;
+    position: relative;
+    margin: 0;
+}
+
+/* --- 2. LIQUID BACKGROUND ANIMATION --- */
+.liquid-background-container {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    overflow: hidden;
+    z-index: -1;
+    pointer-events: none;
+}
+
+.liquid-blob {
+    position: absolute;
+    filter: blur(80px); /* Độ nhòe tạo hiệu ứng lỏng */
+    opacity: 0.6;
+    border-radius: 50%;
+    will-change: transform;
+    animation: move-blob 20s infinite alternate cubic-bezier(0.4, 0.0, 0.2, 1);
+}
+
+.blob-1 {
+    top: 10%; left: 10%; width: 40vw; height: 40vw;
+    background: var(--pink-dark);
+    animation-duration: 25s;
+}
+
+.blob-2 {
+    top: 40%; right: 20%; width: 35vw; height: 35vw;
+    background: var(--purple);
+    animation-duration: 30s;
+    animation-delay: -5s;
+}
+
+.blob-3 {
+    bottom: 10%; left: 30%; width: 50vw; height: 50vw;
+    background: var(--navy-light);
+    animation-duration: 28s;
+    animation-delay: -10s;
+}
+
+@keyframes move-blob {
+    0% { transform: translate(0px, 0px) scale(1); }
+    33% { transform: translate(50px, -50px) scale(1.1); }
+    66% { transform: translate(-30px, 40px) scale(0.9); }
+    100% { transform: translate(0px, 0px) scale(1); }
+}
+
+/* --- 3. GLASSMORPHISM (LIQUID GLASS) --- */
+.glass-panel, .glass {
+    background: rgba(32, 48, 97, 0.35); /* Nền mỏng hơn để thấy blob phía sau */
+    backdrop-filter: blur(24px) saturate(140%);
+    -webkit-backdrop-filter: blur(24px) saturate(140%);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-top: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Hiệu ứng tia sáng quét qua (Shine Effect) */
+.glass-panel::before {
+    content: '';
+    position: absolute;
+    top: 0; left: -150%; width: 100%; height: 100%;
+    background: linear-gradient(
+        115deg,
+        transparent 40%,
+        rgba(255, 255, 255, 0.1) 45%,
+        rgba(255, 255, 255, 0.05) 50%,
+        transparent 55%
+    );
+    transform: skewX(-20deg);
+    animation: glass-shine 8s infinite linear;
+    pointer-events: none;
+}
+
+@keyframes glass-shine {
+    0% { left: -150%; }
+    50%, 100% { left: 150%; }
+}
+
+/* --- 4. COMPONENTS --- */
+
+/* Lyrics Style (Apple Music style) */
+.lyrics-container::-webkit-scrollbar { width: 4px; }
+.lyrics-container::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 4px; }
+
+.lyric-line {
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    opacity: 0.5;
+    transform: scale(0.98);
+    filter: blur(0.8px);
+    border-left: 3px solid transparent;
+}
+
+.lyric-line.active {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+    text-shadow: 0 0 20px rgba(248, 128, 176, 0.5);
+    background: rgba(255,255,255,0.05);
+}
+
+.lyric-line:hover { opacity: 0.8; background: rgba(255,255,255,0.02); }
+
+/* Custom Range Slider */
+input[type=range] {
+    -webkit-appearance: none;
+    background: transparent;
+}
+input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    height: 14px; width: 14px;
+    border-radius: 50%;
+    background: var(--pink-dark);
+    cursor: pointer;
+    margin-top: -6px;
+    box-shadow: 0 0 10px var(--pink-dark);
+    transition: transform 0.1s;
+}
+input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.2); }
+input[type=range]::-webkit-slider-runnable-track {
+    width: 100%; height: 3px;
+    cursor: pointer;
+    background: rgba(247, 191, 216, 0.2);
+    border-radius: 2px;
+}

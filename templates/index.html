@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>AI Audio Studio</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body class="flex items-center justify-center text-white">
+    <div class="liquid-background-container">
+      <div class="liquid-blob blob-1"></div>
+      <div class="liquid-blob blob-2"></div>
+      <div class="liquid-blob blob-3"></div>
+    </div>
+    <div
+      class="glass p-8 rounded-[24px] shadow-2xl w-full max-w-md mx-4 transition-all duration-300"
+    >
+      <h1 class="text-3xl font-bold mb-2 text-center text-white">AI Studio</h1>
+      <p class="text-center text-[#F7BFD8] mb-8 text-sm">
+        Vocal Separator & Podcast Transcriber
+      </p>
+
+      <div class="text-center mb-6">
+        <a
+          href="/help"
+          target="_blank"
+          class="text-xs text-[#F880B0] hover:text-white underline transition-colors"
+        >
+          View Documentation & Help
+        </a>
+      </div>
+
+      <div class="space-y-6">
+        <div
+          class="border-2 border-dashed border-[#885091] rounded-xl p-6 text-center hover:bg-[#57487F]/30 transition relative group cursor-pointer"
+        >
+          <input
+            type="file"
+            id="fileInput"
+            accept=".mp3,.wav,.m4a"
+            class="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+            onchange="handleFileSelect()"
+          />
+          <div id="dropText">
+            <p class="text-[#F7BFD8] font-medium">Click to upload audio</p>
+            <p class="text-xs text-gray-300 mt-1">Max 60 mins</p>
+          </div>
+          <div id="fileInfo" class="hidden">
+            <p class="text-[#F880B0] font-bold truncate" id="fileName"></p>
+          </div>
+        </div>
+
+        <div>
+          <label
+            class="block text-xs text-[#F7BFD8] mb-2 font-bold uppercase tracking-wider"
+            >Processing Mode</label
+          >
+          <div class="grid grid-cols-2 gap-4">
+            <label class="cursor-pointer">
+              <input
+                type="radio"
+                name="mode"
+                value="song"
+                class="peer hidden"
+                checked
+              />
+              <div
+                class="block text-center py-3 rounded-lg bg-[#203061]/50 border border-transparent peer-checked:border-[#F880B0] peer-checked:bg-[#57487F] transition text-sm"
+              >
+                Song / Music
+              </div>
+            </label>
+            <label class="cursor-pointer">
+              <input
+                type="radio"
+                name="mode"
+                value="podcast"
+                class="peer hidden"
+              />
+              <div
+                class="block text-center py-3 rounded-lg bg-[#203061]/50 border border-transparent peer-checked:border-[#F880B0] peer-checked:bg-[#57487F] transition text-sm"
+              >
+                Podcast
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <button
+          id="uploadBtn"
+          onclick="upload()"
+          disabled
+          class="w-full py-3.5 rounded-full bg-[#F880B0] text-white font-bold shadow-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-[#F7BFD8] hover:text-[#203061] transition-all transform hover:scale-[1.02]"
+        >
+          Upload & Start
+        </button>
+      </div>
+    </div>
+
+    <script>
+      let selectedFile = null;
+
+      function handleFileSelect() {
+        const input = document.getElementById("fileInput");
+        if (input.files && input.files[0]) {
+          selectedFile = input.files[0];
+          document.getElementById("dropText").classList.add("hidden");
+          document.getElementById("fileInfo").classList.remove("hidden");
+          document.getElementById("fileName").innerText = selectedFile.name;
+          document.getElementById("uploadBtn").disabled = false;
+        }
+      }
+
+      async function upload() {
+        if (!selectedFile) return;
+
+        const mode = document.querySelector('input[name="mode"]:checked').value;
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+        formData.append("mode", mode);
+
+        const btn = document.getElementById("uploadBtn");
+        btn.innerHTML = `<svg class="animate-spin h-5 w-5 mx-auto text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>`;
+        btn.disabled = true;
+
+        try {
+          const res = await fetch("/upload", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+          window.location.href = `/result/${data.job_id}`;
+        } catch (e) {
+          alert("Upload failed");
+          btn.innerHTML = "Upload & Start";
+          btn.disabled = false;
+        }
+      }
+    </script>
+  </body>
+</html>
