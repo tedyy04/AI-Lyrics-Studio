@@ -14,8 +14,7 @@ from pydub import AudioSegment
 import json
 
 # --- CONFIGURATION ---
-# Set True for a smooth demo without heavy deps
-MOCK_AI_PROCESSING = False  # ĐỔI THÀNH FALSE ĐỂ CHẠY AI THẬT (Demucs + Whisper)
+MOCK_AI_PROCESSING = False 
 UPLOAD_DIR = "uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
 
@@ -23,7 +22,7 @@ app = FastAPI()
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
 
-# --- MEMORY STORE (Thay bằng DB trong production) ---
+# --- MEMORY STORE ---
 jobs = {}
 
 # --- HELPER CLASSES ---
@@ -42,7 +41,6 @@ class Segment(TypedDict):
 
 # --- AI PROCESSING TASKS ---
 def generate_subtitles(segments: List[Segment], duration: float):
-    """Tạo nội dung cho SRT, VTT, LRC, TXT từ segments"""
     srt, vtt, lrc, txt = "", "WEBVTT\n\n", "", ""
     
     for i, seg in enumerate(segments):
@@ -100,10 +98,7 @@ async def process_audio_task(job_id: str, file_path: str, mode: str, original_fi
         if mode == "song" and not MOCK_AI_PROCESSING:
             jobs[job_id]["status"] = JobStatus.SEPARATING
             
-            # --- CHẠY DEMUCS THẬT (SỬA LẠI) ---
             import subprocess
-            
-            # Thay vì gọi "demucs" trống trơn, ta gọi cụ thể python hiện tại để chạy module demucs
             cmd = [
                 sys.executable, "-m", "demucs",
                 "-n", "htdemucs",
@@ -112,21 +107,17 @@ async def process_audio_task(job_id: str, file_path: str, mode: str, original_fi
                 "-o", work_dir
             ]
             
-            # Capture output để in ra terminal nếu có lỗi
             result = subprocess.run(
                 cmd, 
                 capture_output=True, 
                 text=True
             )
             
-            # Kiểm tra lỗi kỹ hơn
             if result.returncode != 0:
-                print("❌ Lỗi Demucs:")
-                print(result.stderr) # In chi tiết lỗi ra Terminal
+                print("Demucs Error:")
+                print(result.stderr) 
                 raise Exception("Demucs failed via CLI")
 
-            # Cập nhật đường dẫn tới file vocal vừa tách được
-            # Cấu trúc folder mặc định của Demucs: {out_dir}/htdemucs/{track_name}/vocals.wav
             filename_no_ext = os.path.splitext(os.path.basename(wav_path))[0]
             separated_path = os.path.join(work_dir, "htdemucs", filename_no_ext, "vocals.wav")
             
@@ -135,7 +126,6 @@ async def process_audio_task(job_id: str, file_path: str, mode: str, original_fi
             else:
                 print("Warning: Không tìm thấy file vocal, dùng file gốc.")
 
-        # 3. Transcribe (Whisper)
         jobs[job_id]["status"] = JobStatus.TRANSCRIBING
         segments: List[Segment] = []
         
@@ -164,7 +154,6 @@ async def process_audio_task(job_id: str, file_path: str, mode: str, original_fi
                     {"start": 10.5, "end": 15.0, "text": "Kết thúc đoạn demo mock data."}
                 ]
         else:
-            # (Phần Mock cũ giữ nguyên...)
             await asyncio.sleep(2)
             segments = [
                 {"start": 0.0, "end": 2.5, "text": "Đây là câu đầu tiên của bài hát."},
@@ -173,20 +162,17 @@ async def process_audio_task(job_id: str, file_path: str, mode: str, original_fi
                 {"start": 10.5, "end": 15.0, "text": "Kết thúc đoạn demo mock data."}
             ]
 
-        # Ensure duration is set (fallback to last segment end)
         if not duration and segments:
             try:
                 duration = max(float(s["end"]) for s in segments)
             except Exception:
                 duration = 0.0
 
-        # 4. Generate Outputs 
         subs = generate_subtitles(segments, duration)
         for ext, content in subs.items():
             with open(os.path.join(work_dir, f"{job_id}.{ext}"), "w", encoding="utf-8") as f:
                 f.write(content)
 
-        # 5. Highlights 
         mid_segments = segments[len(segments)//3 : 2*len(segments)//3]
         highlights = sorted(mid_segments, key=lambda x: float(x['end']) - float(x['start']), reverse=True)[:3]
 
@@ -239,7 +225,6 @@ async def get_status(job_id: str):
     if job_id not in jobs:
         return JSONResponse({"status": "not_found"}, status_code=404)
     job = jobs[job_id]
-    # Chỉ trả về dữ liệu cần thiết
     return {
         "status": job["status"], 
         "error": job.get("error"),
@@ -258,7 +243,7 @@ async def download_file(job_id: str, fmt: str):
         raise HTTPException(404, "File not found")
     return FileResponse(file_path, filename=f"transcript_{job_id}.{fmt}")
 
-# --- STREAMING LOGIC (Support Seek/Range) ---
+# --- STREAMING LOGIC ---
 @app.get("/stream/{job_id}")
 async def stream_audio(job_id: str, request: Request):
     if job_id not in jobs or "processed_path" not in jobs[job_id]:
