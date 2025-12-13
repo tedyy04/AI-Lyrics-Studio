@@ -1,4 +1,3 @@
-/* --- 1. VARIABLES & BASE --- */
 :root {
     --navy-dark: #203061;
     --navy-light: #57487F;
@@ -17,7 +16,6 @@ body {
     margin: 0;
 }
 
-/* --- 2. LIQUID BACKGROUND ANIMATION --- */
 .liquid-background-container {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
@@ -62,7 +60,6 @@ body {
     100% { transform: translate(0px, 0px) scale(1); }
 }
 
-/* --- 3. GLASSMORPHISM (LIQUID GLASS) --- */
 .glass-panel, .glass {
     background: rgba(32, 48, 97, 0.35); /* Nền mỏng hơn để thấy blob phía sau */
     backdrop-filter: blur(24px) saturate(140%);
@@ -74,7 +71,6 @@ body {
     overflow: hidden;
 }
 
-/* Hiệu ứng tia sáng quét qua (Shine Effect) */
 .glass-panel::before {
     content: '';
     position: absolute;
@@ -95,8 +91,6 @@ body {
     0% { left: -150%; }
     50%, 100% { left: 150%; }
 }
-
-/* --- 4. COMPONENTS --- */
 
 /* Lyrics Style (Apple Music style) */
 .lyrics-container::-webkit-scrollbar { width: 4px; }
@@ -120,7 +114,6 @@ body {
 
 .lyric-line:hover { opacity: 0.8; background: rgba(255,255,255,0.02); }
 
-/* Custom Range Slider */
 input[type=range] {
     -webkit-appearance: none;
     background: transparent;
